@@ -13,6 +13,7 @@ import (
 	"github.com/pion/dtls/v3/pkg/crypto/elliptic"
 	"github.com/pion/dtls/v3/pkg/crypto/hash"
 	"github.com/pion/dtls/v3/pkg/crypto/signature"
+	"github.com/pion/dtls/v3/pkg/crypto/signaturehash"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -185,4 +186,192 @@ func TestRSAPSSVsPKCS1v15(t *testing.T) {
 
 	err = verifyKeySignature(expectedMsg, pssSig, hash.SHA256, signature.RSA, [][]byte{rawCert})
 	assert.Error(t, err, "PSS signature should not verify as PKCS#1 v1.5")
+}
+
+func TestExtractSignatureAlgorithmFromCert(t *testing.T) {
+	testCases := []struct {
+		name         string
+		sigAlgorithm x509.SignatureAlgorithm
+		expectedHash hash.Algorithm
+		expectedSig  signature.Algorithm
+		expectError  bool
+	}{
+		{
+			name:         "SHA256WithRSA",
+			sigAlgorithm: x509.SHA256WithRSA,
+			expectedHash: hash.SHA256,
+			expectedSig:  signature.RSA,
+		},
+		{
+			name:         "SHA384WithRSA",
+			sigAlgorithm: x509.SHA384WithRSA,
+			expectedHash: hash.SHA384,
+			expectedSig:  signature.RSA,
+		},
+		{
+			name:         "SHA512WithRSA",
+			sigAlgorithm: x509.SHA512WithRSA,
+			expectedHash: hash.SHA512,
+			expectedSig:  signature.RSA,
+		},
+		{
+			name:         "SHA256WithRSAPSS",
+			sigAlgorithm: x509.SHA256WithRSAPSS,
+			expectedHash: hash.SHA256,
+			expectedSig:  signature.RSA,
+		},
+		{
+			name:         "ECDSAWithSHA256",
+			sigAlgorithm: x509.ECDSAWithSHA256,
+			expectedHash: hash.SHA256,
+			expectedSig:  signature.ECDSA,
+		},
+		{
+			name:         "ECDSAWithSHA384",
+			sigAlgorithm: x509.ECDSAWithSHA384,
+			expectedHash: hash.SHA384,
+			expectedSig:  signature.ECDSA,
+		},
+		{
+			name:         "ECDSAWithSHA512",
+			sigAlgorithm: x509.ECDSAWithSHA512,
+			expectedHash: hash.SHA512,
+			expectedSig:  signature.ECDSA,
+		},
+		{
+			name:         "PureEd25519",
+			sigAlgorithm: x509.PureEd25519,
+			expectedHash: hash.None,
+			expectedSig:  signature.Ed25519,
+		},
+		{
+			name:         "SHA1WithRSA (insecure)",
+			sigAlgorithm: x509.SHA1WithRSA,
+			expectedHash: hash.SHA1,
+			expectedSig:  signature.RSA,
+		},
+		{
+			name:         "Unknown algorithm",
+			sigAlgorithm: x509.SignatureAlgorithm(999),
+			expectError:  true,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			cert := &x509.Certificate{
+				SignatureAlgorithm: tc.sigAlgorithm,
+			}
+
+			alg, err := extractSignatureAlgorithmFromCert(cert)
+
+			if tc.expectError {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tc.expectedHash, alg.Hash)
+				assert.Equal(t, tc.expectedSig, alg.Signature)
+			}
+		})
+	}
+}
+
+func TestValidateCertificateSignatureAlgorithms(t *testing.T) {
+	testCases := []struct {
+		name        string
+		certs       []*x509.Certificate
+		allowed     []signaturehash.Algorithm
+		expectError bool
+	}{
+		{
+			name: "Empty allowed list (no restrictions)",
+			certs: []*x509.Certificate{
+				{SignatureAlgorithm: x509.SHA256WithRSA},
+			},
+			allowed:     []signaturehash.Algorithm{},
+			expectError: false,
+		},
+		{
+			name: "Single cert with allowed algorithm",
+			certs: []*x509.Certificate{
+				{SignatureAlgorithm: x509.SHA256WithRSA},
+			},
+			allowed: []signaturehash.Algorithm{
+				{Hash: hash.SHA256, Signature: signature.RSA},
+			},
+			expectError: false,
+		},
+		{
+			name: "Single cert with disallowed algorithm (leaf + root)",
+			certs: []*x509.Certificate{
+				{SignatureAlgorithm: x509.SHA256WithRSA}, // leaf
+				{SignatureAlgorithm: x509.SHA256WithRSA}, // root (not validated)
+			},
+			allowed: []signaturehash.Algorithm{
+				{Hash: hash.SHA384, Signature: signature.RSA},
+			},
+			expectError: true,
+		},
+		{
+			name: "Multiple certs with allowed algorithms",
+			certs: []*x509.Certificate{
+				{SignatureAlgorithm: x509.SHA256WithRSA},
+				{SignatureAlgorithm: x509.SHA384WithRSA},
+			},
+			allowed: []signaturehash.Algorithm{
+				{Hash: hash.SHA256, Signature: signature.RSA},
+				{Hash: hash.SHA384, Signature: signature.RSA},
+			},
+			expectError: false,
+		},
+		{
+			name: "Multiple certs with one disallowed",
+			certs: []*x509.Certificate{
+				{SignatureAlgorithm: x509.SHA256WithRSA}, // leaf (allowed)
+				{SignatureAlgorithm: x509.SHA1WithRSA},   // intermediate (disallowed)
+				{SignatureAlgorithm: x509.SHA384WithRSA}, // root (not validated)
+			},
+			allowed: []signaturehash.Algorithm{
+				{Hash: hash.SHA256, Signature: signature.RSA},
+				{Hash: hash.SHA384, Signature: signature.RSA},
+			},
+			expectError: true,
+		},
+		{
+			name: "ECDSA certificates",
+			certs: []*x509.Certificate{
+				{SignatureAlgorithm: x509.ECDSAWithSHA256},
+				{SignatureAlgorithm: x509.ECDSAWithSHA384},
+			},
+			allowed: []signaturehash.Algorithm{
+				{Hash: hash.SHA256, Signature: signature.ECDSA},
+				{Hash: hash.SHA384, Signature: signature.ECDSA},
+			},
+			expectError: false,
+		},
+		{
+			name: "RSA-PSS certificates",
+			certs: []*x509.Certificate{
+				{SignatureAlgorithm: x509.SHA256WithRSAPSS},
+			},
+			allowed: []signaturehash.Algorithm{
+				{Hash: hash.SHA256, Signature: signature.RSA},
+			},
+			expectError: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			err := validateCertificateSignatureAlgorithms(tc.certs, tc.allowed)
+
+			if tc.expectError {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
 }

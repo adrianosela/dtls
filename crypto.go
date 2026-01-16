@@ -18,6 +18,7 @@ import (
 	"github.com/pion/dtls/v3/pkg/crypto/elliptic"
 	"github.com/pion/dtls/v3/pkg/crypto/hash"
 	"github.com/pion/dtls/v3/pkg/crypto/signature"
+	"github.com/pion/dtls/v3/pkg/crypto/signaturehash"
 )
 
 type ecdsaSignature struct {
@@ -268,7 +269,7 @@ func loadCerts(rawCertificates [][]byte) ([]*x509.Certificate, error) {
 	return certs, nil
 }
 
-func verifyClientCert(rawCertificates [][]byte, roots *x509.CertPool) (chains [][]*x509.Certificate, err error) {
+func verifyClientCert(rawCertificates [][]byte, roots *x509.CertPool, certSignatureSchemes []signaturehash.Algorithm) (chains [][]*x509.Certificate, err error) {
 	certificate, err := loadCerts(rawCertificates)
 	if err != nil {
 		return nil, err
@@ -284,13 +285,26 @@ func verifyClientCert(rawCertificates [][]byte, roots *x509.CertPool) (chains []
 		KeyUsages:     []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
 	}
 
-	return certificate[0].Verify(opts)
+	chains, err = certificate[0].Verify(opts)
+	if err != nil {
+		return nil, err
+	}
+
+	// Validate certificate signature algorithms if specified
+	if len(certSignatureSchemes) > 0 && len(chains) > 0 {
+		if err := validateCertificateSignatureAlgorithms(chains[0], certSignatureSchemes); err != nil {
+			return nil, err
+		}
+	}
+
+	return chains, nil
 }
 
 func verifyServerCert(
 	rawCertificates [][]byte,
 	roots *x509.CertPool,
 	serverName string,
+	certSignatureSchemes []signaturehash.Algorithm,
 ) (chains [][]*x509.Certificate, err error) {
 	certificate, err := loadCerts(rawCertificates)
 	if err != nil {
@@ -307,5 +321,95 @@ func verifyServerCert(
 		Intermediates: intermediateCAPool,
 	}
 
-	return certificate[0].Verify(opts)
+	chains, err = certificate[0].Verify(opts)
+	if err != nil {
+		return nil, err
+	}
+
+	// Validate certificate signature algorithms if specified
+	if len(certSignatureSchemes) > 0 && len(chains) > 0 {
+		if err := validateCertificateSignatureAlgorithms(chains[0], certSignatureSchemes); err != nil {
+			return nil, err
+		}
+	}
+
+	return chains, nil
+}
+
+// extractSignatureAlgorithmFromCert maps x509.SignatureAlgorithm to our internal signaturehash.Algorithm type.
+// This allows us to validate that certificate chain signatures use allowed signature algorithms.
+func extractSignatureAlgorithmFromCert(cert *x509.Certificate) (signaturehash.Algorithm, error) {
+	var h hash.Algorithm
+	var s signature.Algorithm
+
+	switch cert.SignatureAlgorithm {
+	case x509.SHA256WithRSA, x509.SHA256WithRSAPSS:
+		h = hash.SHA256
+		s = signature.RSA
+	case x509.SHA384WithRSA, x509.SHA384WithRSAPSS:
+		h = hash.SHA384
+		s = signature.RSA
+	case x509.SHA512WithRSA, x509.SHA512WithRSAPSS:
+		h = hash.SHA512
+		s = signature.RSA
+	case x509.ECDSAWithSHA256:
+		h = hash.SHA256
+		s = signature.ECDSA
+	case x509.ECDSAWithSHA384:
+		h = hash.SHA384
+		s = signature.ECDSA
+	case x509.ECDSAWithSHA512:
+		h = hash.SHA512
+		s = signature.ECDSA
+	case x509.PureEd25519:
+		h = hash.None // Ed25519 doesn't use a separate hash
+		s = signature.Ed25519
+	case x509.SHA1WithRSA:
+		h = hash.SHA1
+		s = signature.RSA
+	case x509.ECDSAWithSHA1:
+		h = hash.SHA1
+		s = signature.ECDSA
+	default:
+		return signaturehash.Algorithm{}, errInvalidSignatureAlgorithm
+	}
+
+	return signaturehash.Algorithm{Hash: h, Signature: s}, nil
+}
+
+// validateCertificateSignatureAlgorithms validates that all certificates in the chain
+// use signature algorithms that are in the allowed list. This implements the
+// signature_algorithms_cert extension validation per RFC 8446 Section 4.2.3.
+func validateCertificateSignatureAlgorithms(
+	certs []*x509.Certificate,
+	allowedAlgorithms []signaturehash.Algorithm,
+) error {
+	if len(allowedAlgorithms) == 0 {
+		// No restrictions specified
+		return nil
+	}
+
+	// Validate each certificate's signature algorithm (except the root, which we trust)
+	for i := 0; i < len(certs)-1; i++ {
+		cert := certs[i]
+		certAlg, err := extractSignatureAlgorithmFromCert(cert)
+		if err != nil {
+			return err
+		}
+
+		// Check if this algorithm is in the allowed list
+		found := false
+		for _, allowed := range allowedAlgorithms {
+			if certAlg.Hash == allowed.Hash && certAlg.Signature == allowed.Signature {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			return errInvalidCertificateSignatureAlgorithm
+		}
+	}
+
+	return nil
 }
