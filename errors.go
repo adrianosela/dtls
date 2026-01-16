@@ -98,6 +98,8 @@ var (
 	//nolint:err113
 	errUnsupportedProtocolVersion = &FatalError{Err: errors.New("unsupported protocol version")}
 	//nolint:err113
+	errNotImplemented = &InternalError{Err: errors.New("feature not yet implemented")}
+	//nolint:err113
 	errPSKAndIdentityMustBeSetForClient = &FatalError{
 		Err: errors.New("PSK and PSK Identity Hint must both be set for client"),
 	}

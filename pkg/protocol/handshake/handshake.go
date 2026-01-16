@@ -129,7 +129,14 @@ func (h *Handshake) Unmarshal(data []byte) error { //nolint:cyclop
 	case TypeHelloVerifyRequest:
 		h.Message = &MessageHelloVerifyRequest{}
 	case TypeServerHello:
-		h.Message = &MessageServerHello{}
+		// ServerHello and HelloRetryRequest share the same type value (2).
+		// Distinguish by checking if the random field matches the HelloRetryRequest magic value.
+		if isHelloRetryRequestBytes(data[HeaderLength:]) {
+			// DTLS 1.3 HelloRetryRequest
+			h.Message = &MessageHelloRetryRequest13{}
+		} else {
+			h.Message = &MessageServerHello{}
+		}
 	case TypeCertificate:
 		h.Message = &MessageCertificate{}
 	case TypeServerKeyExchange:
@@ -149,4 +156,20 @@ func (h *Handshake) Unmarshal(data []byte) error { //nolint:cyclop
 	}
 
 	return h.Message.Unmarshal(data[HeaderLength:])
+}
+
+// isHelloRetryRequestBytes checks if the message data contains the HelloRetryRequest magic random value.
+// This is used to distinguish HelloRetryRequest from ServerHello since they share the same type value.
+// The random field starts at offset 2 (after version bytes).
+func isHelloRetryRequestBytes(data []byte) bool {
+	// Need at least version (2 bytes) + random (32 bytes)
+	if len(data) < 2+RandomLength {
+		return false
+	}
+
+	// Extract the random bytes (offset 2, length 32)
+	var random [RandomLength]byte
+	copy(random[:], data[2:2+RandomLength])
+
+	return IsHelloRetryRequest(random)
 }
