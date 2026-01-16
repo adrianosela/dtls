@@ -10,4 +10,5 @@ var (
 	errInvalidSignatureAlgorithm   = errors.New("invalid signature algorithm")
 	errInvalidHashAlgorithm        = errors.New("invalid hash algorithm")
 	errInvalidPrivateKey           = errors.New("invalid private key type")
+	errInvalidProtocolVersion      = errors.New("invalid protocol version")
 )

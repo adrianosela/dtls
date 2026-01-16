@@ -4,12 +4,15 @@
 package dtls
 
 import (
+	"crypto/rand"
 	"crypto/x509"
 	"encoding/pem"
+	"math/big"
 	"testing"
 
 	"github.com/pion/dtls/v3/pkg/crypto/elliptic"
 	"github.com/pion/dtls/v3/pkg/crypto/hash"
+	"github.com/pion/dtls/v3/pkg/crypto/signature"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -79,7 +82,107 @@ func TestGenerateKeySignature(t *testing.T) {
 		0x5c, 0x36, 0x75, 0x86,
 	}
 
-	signature, err := generateKeySignature(clientRandom, serverRandom, publicKey, elliptic.X25519, key, hash.SHA256)
+	signature, err := generateKeySignature(clientRandom, serverRandom, publicKey, elliptic.X25519,
+		key, hash.SHA256, signature.RSA)
 	assert.NoError(t, err)
 	assert.Equal(t, expectedSignature, signature)
+}
+
+func TestRSAPSSSignatureGeneration(t *testing.T) {
+	clientRandom := []byte{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07}
+	serverRandom := []byte{0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f}
+	publicKey := []byte{0x10, 0x11, 0x12, 0x13}
+
+	// Parse the private key
+	block, _ := pem.Decode([]byte(rawPrivateKey))
+	key, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+	assert.NoError(t, err)
+
+	// Generate PSS signature
+	sig, err := generateKeySignature(clientRandom, serverRandom, publicKey, elliptic.X25519,
+		key, hash.SHA256, signature.RSA_PSS_RSAE_SHA256)
+	assert.NoError(t, err)
+	assert.NotNil(t, sig)
+
+	// Verify that PSS signature is different from PKCS#1 v1.5 (PSS is randomized)
+	sig2, err := generateKeySignature(clientRandom, serverRandom, publicKey, elliptic.X25519,
+		key, hash.SHA256, signature.RSA_PSS_RSAE_SHA256)
+	assert.NoError(t, err)
+	// PSS signatures should be different each time due to random salt
+	assert.NotEqual(t, sig, sig2)
+}
+
+func TestRSAPSSSignatureVerification(t *testing.T) {
+	clientRandom := []byte{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07}
+	serverRandom := []byte{0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f}
+	publicKey := []byte{0x10, 0x11, 0x12, 0x13}
+
+	// Parse the private key
+	block, _ := pem.Decode([]byte(rawPrivateKey))
+	key, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+	assert.NoError(t, err)
+
+	// Generate certificate with the public key
+	cert := &x509.Certificate{
+		SerialNumber: big.NewInt(1),
+		PublicKey:    &key.PublicKey,
+	}
+	rawCert, err := x509.CreateCertificate(rand.Reader, cert, cert, &key.PublicKey, key)
+	assert.NoError(t, err)
+
+	// Generate PSS signature
+	sig, err := generateKeySignature(clientRandom, serverRandom, publicKey, elliptic.X25519,
+		key, hash.SHA256, signature.RSA_PSS_RSAE_SHA256)
+	assert.NoError(t, err)
+
+	// Verify PSS signature
+	expectedMsg := valueKeyMessage(clientRandom, serverRandom, publicKey, elliptic.X25519)
+	err = verifyKeySignature(expectedMsg, sig, hash.SHA256, signature.RSA_PSS_RSAE_SHA256, [][]byte{rawCert})
+	assert.NoError(t, err)
+
+	// Verify that PKCS#1 v1.5 verification fails for PSS signature
+	err = verifyKeySignature(expectedMsg, sig, hash.SHA256, signature.RSA, [][]byte{rawCert})
+	assert.Error(t, err)
+}
+
+func TestRSAPSSVsPKCS1v15(t *testing.T) {
+	clientRandom := []byte{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07}
+	serverRandom := []byte{0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f}
+	publicKey := []byte{0x10, 0x11, 0x12, 0x13}
+
+	// Parse the private key
+	block, _ := pem.Decode([]byte(rawPrivateKey))
+	key, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+	assert.NoError(t, err)
+
+	// Generate certificate
+	cert := &x509.Certificate{
+		SerialNumber: big.NewInt(1),
+		PublicKey:    &key.PublicKey,
+	}
+	rawCert, err := x509.CreateCertificate(rand.Reader, cert, cert, &key.PublicKey, key)
+	assert.NoError(t, err)
+
+	expectedMsg := valueKeyMessage(clientRandom, serverRandom, publicKey, elliptic.X25519)
+
+	// Generate and verify PKCS#1 v1.5 signature
+	pkcs1Sig, err := generateKeySignature(clientRandom, serverRandom, publicKey, elliptic.X25519,
+		key, hash.SHA256, signature.RSA)
+	assert.NoError(t, err)
+	err = verifyKeySignature(expectedMsg, pkcs1Sig, hash.SHA256, signature.RSA, [][]byte{rawCert})
+	assert.NoError(t, err)
+
+	// Generate and verify PSS signature
+	pssSig, err := generateKeySignature(clientRandom, serverRandom, publicKey, elliptic.X25519,
+		key, hash.SHA256, signature.RSA_PSS_RSAE_SHA256)
+	assert.NoError(t, err)
+	err = verifyKeySignature(expectedMsg, pssSig, hash.SHA256, signature.RSA_PSS_RSAE_SHA256, [][]byte{rawCert})
+	assert.NoError(t, err)
+
+	// Verify cross-verification fails
+	err = verifyKeySignature(expectedMsg, pkcs1Sig, hash.SHA256, signature.RSA_PSS_RSAE_SHA256, [][]byte{rawCert})
+	assert.Error(t, err, "PKCS#1 v1.5 signature should not verify as PSS")
+
+	err = verifyKeySignature(expectedMsg, pssSig, hash.SHA256, signature.RSA, [][]byte{rawCert})
+	assert.Error(t, err, "PSS signature should not verify as PKCS#1 v1.5")
 }
