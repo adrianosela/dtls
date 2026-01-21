@@ -18,9 +18,14 @@ func formatSize(b *testing.B, size int) string {
 		if remainder > 0 {
 			return string(rune('0'+kb)) + "." + string(rune('0'+remainder)) + "KB"
 		}
+<<<<<<< HEAD
 
 		return string(rune('0'+kb)) + "KB"
 	}
 
+=======
+		return string(rune('0'+kb)) + "KB"
+	}
+>>>>>>> 032061d (Ciphersuite Package Speed/Malloc Optimizations)
 	return string(rune('0'+size/1024/10)) + string(rune('0'+(size/1024)%10)) + "KB"
 }

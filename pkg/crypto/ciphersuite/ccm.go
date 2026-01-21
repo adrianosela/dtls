@@ -8,6 +8,7 @@ import (
 	"crypto/rand"
 	"encoding/binary"
 	"fmt"
+	"sync"
 
 	"github.com/pion/dtls/v3/pkg/crypto/ccm"
 	"github.com/pion/dtls/v3/pkg/protocol"
@@ -23,6 +24,13 @@ const (
 	CCMTagLength   CCMTagLen = 16
 	ccmNonceLength           = 12
 )
+
+var ccmNoncePool = sync.Pool{
+	New: func() any {
+		b := make([]byte, ccmNonceLength)
+		return &b
+	},
+}
 
 // CCM Provides an API to Encrypt/Decrypt DTLS 1.2 Packets.
 type CCM struct {
@@ -65,7 +73,12 @@ func (c *CCM) Encrypt(pkt *recordlayer.RecordLayer, raw []byte) ([]byte, error) 
 	payload := raw[pkt.Header.Size():]
 	raw = raw[:pkt.Header.Size()]
 
-	nonce := append(append([]byte{}, c.localWriteIV[:4]...), make([]byte, 8)...)
+	// Get nonce buffer from pool
+	noncePtr := ccmNoncePool.Get().(*[]byte)
+	nonce := *noncePtr
+	defer ccmNoncePool.Put(noncePtr)
+
+	copy(nonce[:4], c.localWriteIV[:4])
 	if _, err := rand.Read(nonce[4:]); err != nil {
 		return nil, err
 	}
@@ -76,15 +89,20 @@ func (c *CCM) Encrypt(pkt *recordlayer.RecordLayer, raw []byte) ([]byte, error) 
 	} else {
 		additionalData = generateAEADAdditionalData(&pkt.Header, len(payload))
 	}
-	encryptedPayload := c.localCCM.Seal(nil, nonce, payload, additionalData)
 
-	encryptedPayload = append(nonce[4:], encryptedPayload...)
-	raw = append(raw, encryptedPayload...)
+	// Pre-calculate final buffer size: header + 8-byte explicit nonce + payload + tag
+	finalSize := len(raw) + 8 + len(payload) + int(c.tagLen)
+	result := make([]byte, finalSize)
+	copy(result, raw)
+	copy(result[len(raw):], nonce[4:])
+
+	// Seal directly into final buffer
+	c.localCCM.Seal(result[len(raw)+8:len(raw)+8], nonce, payload, additionalData)
 
 	// Update recordLayer size to include explicit nonce
-	binary.BigEndian.PutUint16(raw[pkt.Header.Size()-2:], uint16(len(raw)-pkt.Header.Size())) //nolint:gosec //G115
+	binary.BigEndian.PutUint16(result[pkt.Header.Size()-2:], uint16(len(result)-pkt.Header.Size())) //nolint:gosec //G115
 
-	return raw, nil
+	return result, nil
 }
 
 // Decrypt decrypts a DTLS RecordLayer message.
@@ -100,7 +118,13 @@ func (c *CCM) Decrypt(header recordlayer.Header, in []byte) ([]byte, error) {
 		return nil, errNotEnoughRoomForNonce
 	}
 
-	nonce := append(append([]byte{}, c.remoteWriteIV[:4]...), in[header.Size():header.Size()+8]...)
+	// Get nonce buffer from pool
+	noncePtr := ccmNoncePool.Get().(*[]byte)
+	nonce := *noncePtr
+	defer ccmNoncePool.Put(noncePtr)
+
+	copy(nonce[:4], c.remoteWriteIV[:4])
+	copy(nonce[4:], in[header.Size():header.Size()+8])
 	out := in[header.Size()+8:]
 
 	var additionalData []byte
