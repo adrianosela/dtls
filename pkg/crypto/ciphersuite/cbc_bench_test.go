@@ -1,5 +1,8 @@
+<<<<<<< HEAD
 //go:build bench
 
+=======
+>>>>>>> 03d6239 (Add Ciphersuite Benchmark Tests)
 // SPDX-FileCopyrightText: 2023 The Pion community <https://pion.ly>
 // SPDX-License-Identifier: MIT
 
