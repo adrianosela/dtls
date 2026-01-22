@@ -406,21 +406,24 @@ func (c *Conn) Write(payload []byte) (int, error) {
 		return 0, err
 	}
 
-	return len(payload), c.writePackets(c.writeDeadline, []*packet{
-		{
-			record: &recordlayer.RecordLayer{
-				Header: recordlayer.Header{
-					Epoch:   c.state.getLocalEpoch(),
-					Version: protocol.Version1_2,
-				},
-				Content: &protocol.ApplicationData{
-					Data: payload,
-				},
-			},
-			shouldWrapCID: len(c.state.remoteConnectionID) > 0,
-			shouldEncrypt: true,
-		},
-	})
+	pkt := poolWritePacket.Get().(*packet)
+	pkt.record.Header.Epoch = c.state.getLocalEpoch()
+	pkt.record.Header.Version = protocol.Version1_2
+	pkt.record.Content.(*protocol.ApplicationData).Data = payload
+	pkt.shouldWrapCID = len(c.state.remoteConnectionID) > 0
+	pkt.shouldEncrypt = true
+	pkt.resetLocalSequenceNumber = false
+
+	err := c.writePackets(c.writeDeadline, []*packet{pkt})
+
+	// Reset packet data before returning to pool
+	pkt.record.Content.(*protocol.ApplicationData).Data = nil
+	poolWritePacket.Put(pkt)
+
+	if err != nil {
+		return 0, err
+	}
+	return len(payload), nil
 }
 
 // Close closes the connection.
@@ -468,16 +471,26 @@ func (c *Conn) RemoteSRTPMasterKeyIdentifier() ([]byte, bool) {
 	return c.state.remoteSRTPMasterKeyIdentifier, true
 }
 
+var poolRawPackets = sync.Pool{ //nolint:gochecknoglobals
+	New: func() any {
+		s := make([][]byte, 0, 4)
+		return &s
+	},
+}
+
 func (c *Conn) writePackets(ctx context.Context, pkts []*packet) error {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	var rawPackets [][]byte
+	rawPacketsPtr := poolRawPackets.Get().(*[][]byte)
+	rawPackets := (*rawPacketsPtr)[:0]
 
 	for _, pkt := range pkts {
 		if dtlsHandshake, ok := pkt.record.Content.(*handshake.Handshake); ok {
 			handshakeRaw, err := pkt.record.Marshal()
 			if err != nil {
+				*rawPacketsPtr = rawPackets
+				poolRawPackets.Put(rawPacketsPtr)
 				return err
 			}
 
@@ -495,21 +508,30 @@ func (c *Conn) writePackets(ctx context.Context, pkts []*packet) error {
 
 			rawHandshakePackets, err := c.processHandshakePacket(pkt, dtlsHandshake)
 			if err != nil {
+				*rawPacketsPtr = rawPackets
+				poolRawPackets.Put(rawPacketsPtr)
 				return err
 			}
 			rawPackets = append(rawPackets, rawHandshakePackets...)
 		} else {
 			rawPacket, err := c.processPacket(pkt)
 			if err != nil {
+				*rawPacketsPtr = rawPackets
+				poolRawPackets.Put(rawPacketsPtr)
 				return err
 			}
 			rawPackets = append(rawPackets, rawPacket)
 		}
 	}
 	if len(rawPackets) == 0 {
+		*rawPacketsPtr = rawPackets
+		poolRawPackets.Put(rawPacketsPtr)
 		return nil
 	}
 	compactedRawPackets := c.compactRawPackets(rawPackets)
+
+	*rawPacketsPtr = rawPackets
+	poolRawPackets.Put(rawPacketsPtr)
 
 	for _, compactedRawPackets := range compactedRawPackets {
 		if _, err := c.nextConn.WriteToContext(ctx, compactedRawPackets, c.rAddr); err != nil {
@@ -520,24 +542,42 @@ func (c *Conn) writePackets(ctx context.Context, pkts []*packet) error {
 	return nil
 }
 
+var poolCompactBuffer = sync.Pool{ //nolint:gochecknoglobals
+	New: func() any {
+		b := make([]byte, 0, 2048)
+		return &b
+	},
+}
+
 func (c *Conn) compactRawPackets(rawPackets [][]byte) [][]byte {
 	// avoid a useless copy in the common case
 	if len(rawPackets) == 1 {
 		return rawPackets
 	}
 
-	combinedRawPackets := make([][]byte, 0)
-	currentCombinedRawPacket := make([]byte, 0)
+	combinedRawPackets := make([][]byte, 0, len(rawPackets))
+	bufptr := poolCompactBuffer.Get().(*[]byte)
+	currentCombinedRawPacket := (*bufptr)[:0]
 
 	for _, rawPacket := range rawPackets {
 		if len(currentCombinedRawPacket) > 0 && len(currentCombinedRawPacket)+len(rawPacket) >= c.maximumTransmissionUnit {
-			combinedRawPackets = append(combinedRawPackets, currentCombinedRawPacket)
-			currentCombinedRawPacket = []byte{}
+			// Make a copy before appending to result
+			pkt := make([]byte, len(currentCombinedRawPacket))
+			copy(pkt, currentCombinedRawPacket)
+			combinedRawPackets = append(combinedRawPackets, pkt)
+			currentCombinedRawPacket = currentCombinedRawPacket[:0]
 		}
 		currentCombinedRawPacket = append(currentCombinedRawPacket, rawPacket...)
 	}
 
-	combinedRawPackets = append(combinedRawPackets, currentCombinedRawPacket)
+	if len(currentCombinedRawPacket) > 0 {
+		pkt := make([]byte, len(currentCombinedRawPacket))
+		copy(pkt, currentCombinedRawPacket)
+		combinedRawPackets = append(combinedRawPackets, pkt)
+	}
+
+	*bufptr = currentCombinedRawPacket[:0]
+	poolCompactBuffer.Put(bufptr)
 
 	return combinedRawPackets
 }
@@ -729,6 +769,19 @@ var poolReadBuffer = sync.Pool{ //nolint:gochecknoglobals
 		b := make([]byte, inboundBufferSize)
 
 		return &b
+	},
+}
+
+var poolWritePacket = sync.Pool{ //nolint:gochecknoglobals
+	New: func() any {
+		return &packet{
+			record: &recordlayer.RecordLayer{
+				Header: recordlayer.Header{},
+				Content: &protocol.ApplicationData{
+					Data: nil,
+				},
+			},
+		}
 	},
 }
 
