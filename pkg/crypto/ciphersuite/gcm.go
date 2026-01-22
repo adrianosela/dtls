@@ -9,6 +9,7 @@ import (
 	"crypto/rand"
 	"encoding/binary"
 	"fmt"
+	"sync"
 
 	"github.com/pion/dtls/v3/pkg/protocol"
 	"github.com/pion/dtls/v3/pkg/protocol/recordlayer"
@@ -18,6 +19,13 @@ const (
 	gcmTagLength   = 16
 	gcmNonceLength = 12
 )
+
+var poolGCMNonce = sync.Pool{ //nolint:gochecknoglobals
+	New: func() any {
+		b := make([]byte, gcmNonceLength)
+		return &b
+	},
+}
 
 // GCM Provides an API to Encrypt/Decrypt DTLS 1.2 Packets.
 type GCM struct {
@@ -58,9 +66,11 @@ func (g *GCM) Encrypt(pkt *recordlayer.RecordLayer, raw []byte) ([]byte, error) 
 	payload := raw[pkt.Header.Size():]
 	raw = raw[:pkt.Header.Size()]
 
-	nonce := make([]byte, gcmNonceLength)
+	noncePtr := poolGCMNonce.Get().(*[]byte)
+	nonce := *noncePtr
 	copy(nonce, g.localWriteIV[:4])
 	if _, err := rand.Read(nonce[4:]); err != nil {
+		poolGCMNonce.Put(noncePtr)
 		return nil, err
 	}
 
@@ -76,6 +86,8 @@ func (g *GCM) Encrypt(pkt *recordlayer.RecordLayer, raw []byte) ([]byte, error) 
 	copy(r[len(raw):], nonce[4:])
 
 	g.localGCM.Seal(r[len(raw)+8:len(raw)+8], nonce, payload, additionalData)
+
+	poolGCMNonce.Put(noncePtr)
 
 	// Update recordLayer size to include explicit nonce
 	binary.BigEndian.PutUint16(r[pkt.Header.Size()-2:], uint16(len(r)-pkt.Header.Size())) //nolint:gosec //G115
