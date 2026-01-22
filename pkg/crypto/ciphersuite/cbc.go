@@ -10,6 +10,7 @@ import ( //nolint:gci
 	"crypto/rand"
 	"encoding/binary"
 	"hash"
+	"sync"
 
 	"github.com/pion/dtls/v3/internal/util"
 	"github.com/pion/dtls/v3/pkg/crypto/prf"
@@ -29,6 +30,9 @@ type CBC struct {
 	writeCBC, readCBC cbcMode
 	writeMac, readMac []byte
 	h                 prf.HashFunc
+
+	// buffer pool for IVs and padding.
+	aesBlockBufferPool sync.Pool
 }
 
 // NewCBC creates a DTLS CBC Cipher.
@@ -63,6 +67,13 @@ func NewCBC(
 		readCBC: readCBC,
 		readMac: remoteMac,
 		h:       hashFunc,
+
+		aesBlockBufferPool: sync.Pool{
+			New: func() any {
+				b := make([]byte, aes.BlockSize)
+				return &b // nolint:nlreturn
+			},
+		},
 	}, nil
 }
 
@@ -87,16 +98,23 @@ func (c *CBC) Encrypt(pkt *recordlayer.RecordLayer, raw []byte) ([]byte, error) 
 	}
 	payload = append(payload, mac...)
 
-	// Generate + Append padding
-	padding := make([]byte, blockSize-len(payload)%blockSize)
-	paddingLen := len(padding)
+	// Get padding buffer from pool + Append
+	paddingPtr := c.aesBlockBufferPool.Get().(*[]byte) // nolint:forcetypeassert
+	paddingBuf := *paddingPtr
+	defer c.aesBlockBufferPool.Put(paddingPtr)
+
+	paddingLen := blockSize - len(payload)%blockSize
+	padding := paddingBuf[:paddingLen]
 	for i := 0; i < paddingLen; i++ {
 		padding[i] = byte(paddingLen - 1)
 	}
 	payload = append(payload, padding...)
 
-	// Generate IV
-	iv := make([]byte, blockSize)
+	// Get IV buffer from pool
+	ivPtr := c.aesBlockBufferPool.Get().(*[]byte) // nolint:forcetypeassert
+	iv := *ivPtr
+	defer c.aesBlockBufferPool.Put(ivPtr)
+
 	if _, err := rand.Read(iv); err != nil {
 		return nil, err
 	}
@@ -185,16 +203,16 @@ func (c *CBC) hmac(
 ) ([]byte, error) {
 	hmacHash := hmac.New(hf, key)
 
-	msg := make([]byte, 13)
+	var msg [13]byte
 
-	binary.BigEndian.PutUint16(msg, epoch)
+	binary.BigEndian.PutUint16(msg[:], epoch)
 	util.PutBigEndianUint48(msg[2:], sequenceNumber)
 	msg[8] = byte(contentType)
 	msg[9] = protocolVersion.Major
 	msg[10] = protocolVersion.Minor
 	binary.BigEndian.PutUint16(msg[11:], uint16(len(payload))) //nolint:gosec //G115
 
-	if _, err := hmacHash.Write(msg); err != nil {
+	if _, err := hmacHash.Write(msg[:]); err != nil {
 		return nil, err
 	}
 	if _, err := hmacHash.Write(payload); err != nil {
