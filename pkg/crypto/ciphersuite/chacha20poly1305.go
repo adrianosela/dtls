@@ -61,9 +61,8 @@ func (c *ChaCha20Poly1305) Encrypt(pkt *recordlayer.RecordLayer, raw []byte) ([]
 	seq64 := (uint64(pkt.Header.Epoch) << 48) | (pkt.Header.SequenceNumber & 0x0000ffffffffffff)
 
 	// XOR the last 8 bytes of the nonce with the sequence number
-	for i := range 8 {
-		nonce[4+i] ^= byte(seq64 >> (56 - uint(i)*8)) //nolint:gosec
-	}
+	existingValue := binary.BigEndian.Uint64(nonce[4:])
+	binary.BigEndian.PutUint64(nonce[4:], existingValue^seq64)
 
 	var additionalData []byte
 	if pkt.Header.ContentType == protocol.ContentTypeConnectionID {
@@ -74,13 +73,11 @@ func (c *ChaCha20Poly1305) Encrypt(pkt *recordlayer.RecordLayer, raw []byte) ([]
 
 	// NOTE: ChaCha20-Poly1305 does NOT include an explicit nonce
 	// in the record (unlike GCM which includes 8 bytes)
-	encrypted := c.localCipher.Seal(nil, nonce[:], payload, additionalData)
-
-	result := make([]byte, len(raw)+len(encrypted))
+	result := make([]byte, len(raw)+len(payload)+chachaTagLength)
 	copy(result, raw)
-	copy(result[len(raw):], encrypted)
+	c.localCipher.Seal(result[len(raw):len(raw)], nonce[:], payload, additionalData)
 
-	binary.BigEndian.PutUint16(result[pkt.Header.Size()-2:], uint16(len(encrypted))) //nolint:gosec
+	binary.BigEndian.PutUint16(result[pkt.Header.Size()-2:], uint16(len(payload)+chachaTagLength)) //nolint:gosec
 
 	return result, nil
 }
@@ -103,9 +100,8 @@ func (c *ChaCha20Poly1305) Decrypt(header recordlayer.Header, in []byte) ([]byte
 	seq64 := (uint64(header.Epoch) << 48) | (header.SequenceNumber & 0x0000ffffffffffff)
 
 	// XOR the last 8 bytes of the nonce with the sequence number
-	for i := range 8 {
-		nonce[4+i] ^= byte(seq64 >> (56 - uint(i)*8)) //nolint:gosec
-	}
+	existingValue := binary.BigEndian.Uint64(nonce[4:])
+	binary.BigEndian.PutUint64(nonce[4:], existingValue^seq64)
 
 	// NOTE: ChaCha20-Poly1305 has NO explicit nonce in the record
 	ciphertext := in[header.Size():]
