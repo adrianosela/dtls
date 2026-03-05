@@ -1,0 +1,66 @@
+goos: darwin
+goarch: arm64
+pkg: github.com/pion/dtls/v3/pkg/crypto/ciphersuite
+cpu: Apple M1 Pro
+BenchmarkGCMDecrypt/016B-8         	11016822	        96.33 ns/op	 166.09 MB/s	      96 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/016B-8         	11903914	        96.37 ns/op	 166.02 MB/s	      96 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/016B-8         	12664600	        95.50 ns/op	 167.54 MB/s	      96 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/016B-8         	12617577	        95.30 ns/op	 167.89 MB/s	      96 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/016B-8         	12456105	        95.92 ns/op	 166.80 MB/s	      96 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/016B-8         	12549948	        98.40 ns/op	 162.60 MB/s	      96 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/016B-8         	12173960	        96.13 ns/op	 166.44 MB/s	      96 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/016B-8         	12619651	       101.8 ns/op	 157.25 MB/s	      96 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/016B-8         	11417343	        97.53 ns/op	 164.05 MB/s	      96 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/016B-8         	12008496	        96.25 ns/op	 166.23 MB/s	      96 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/064B-8         	 9273074	       135.2 ns/op	 473.30 MB/s	     144 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/064B-8         	 8491664	       144.3 ns/op	 443.63 MB/s	     144 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/064B-8         	 7453032	       189.9 ns/op	 337.08 MB/s	     144 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/064B-8         	 8558287	       131.9 ns/op	 485.16 MB/s	     144 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/064B-8         	 9159730	       130.3 ns/op	 491.21 MB/s	     144 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/064B-8         	 9323392	       129.7 ns/op	 493.36 MB/s	     144 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/064B-8         	 9051274	       139.8 ns/op	 457.67 MB/s	     144 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/064B-8         	 8630084	       131.0 ns/op	 488.57 MB/s	     144 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/064B-8         	 9340180	       129.0 ns/op	 496.06 MB/s	     144 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/064B-8         	 9162356	       134.3 ns/op	 476.70 MB/s	     144 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/256B-8         	 8066457	       157.2 ns/op	1628.51 MB/s	     352 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/256B-8         	 8289460	       171.5 ns/op	1493.14 MB/s	     352 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/256B-8         	 7339785	       158.5 ns/op	1615.38 MB/s	     352 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/256B-8         	 7867284	       179.5 ns/op	1426.15 MB/s	     352 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/256B-8         	 7749319	       151.8 ns/op	1686.21 MB/s	     352 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/256B-8         	 8005780	       149.0 ns/op	1718.04 MB/s	     352 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/256B-8         	 8216422	       163.2 ns/op	1568.76 MB/s	     352 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/256B-8         	 7600765	       148.7 ns/op	1721.10 MB/s	     352 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/256B-8         	 8369680	       149.5 ns/op	1712.51 MB/s	     352 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/256B-8         	 8163991	       157.5 ns/op	1625.84 MB/s	     352 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/512B-8         	 5149869	       223.9 ns/op	2286.62 MB/s	     608 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/512B-8         	 5504851	       235.6 ns/op	2172.84 MB/s	     608 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/512B-8         	 5521375	       222.3 ns/op	2302.93 MB/s	     608 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/512B-8         	 5493429	       222.0 ns/op	2306.12 MB/s	     608 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/512B-8         	 5461930	       213.3 ns/op	2400.10 MB/s	     608 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/512B-8         	 5623365	       211.8 ns/op	2417.40 MB/s	     608 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/512B-8         	 5662040	       211.5 ns/op	2421.06 MB/s	     608 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/512B-8         	 4959771	       260.5 ns/op	1965.34 MB/s	     608 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/512B-8         	 4377667	       267.0 ns/op	1917.43 MB/s	     608 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/512B-8         	 5062777	       211.5 ns/op	2420.97 MB/s	     608 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/1KB-8          	 3440805	       346.1 ns/op	2958.84 MB/s	    1184 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/1KB-8          	 3424910	       343.0 ns/op	2985.15 MB/s	    1184 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/1KB-8          	 3317356	       343.4 ns/op	2981.84 MB/s	    1184 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/1KB-8          	 3549715	       341.5 ns/op	2998.44 MB/s	    1184 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/1KB-8          	 3332259	       353.7 ns/op	2895.32 MB/s	    1184 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/1KB-8          	 3517548	       340.9 ns/op	3004.19 MB/s	    1184 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/1KB-8          	 3463971	       340.5 ns/op	3007.56 MB/s	    1184 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/1KB-8          	 3526573	       342.2 ns/op	2992.24 MB/s	    1184 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/1KB-8          	 3445693	       344.0 ns/op	2977.13 MB/s	    1184 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/1KB-8          	 3438828	       347.5 ns/op	2946.60 MB/s	    1184 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/1.4KB-8        	 2354695	       502.0 ns/op	2988.07 MB/s	    1824 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/1.4KB-8        	 2301614	       505.8 ns/op	2965.74 MB/s	    1824 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/1.4KB-8        	 2351020	       503.0 ns/op	2982.20 MB/s	    1824 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/1.4KB-8        	 2276838	       516.3 ns/op	2905.19 MB/s	    1824 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/1.4KB-8        	 2292159	       518.7 ns/op	2891.93 MB/s	    1824 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/1.4KB-8        	 2370478	       508.0 ns/op	2952.58 MB/s	    1824 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/1.4KB-8        	 2275070	       515.8 ns/op	2908.06 MB/s	    1824 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/1.4KB-8        	 2308818	       504.4 ns/op	2973.61 MB/s	    1824 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/1.4KB-8        	 2391902	       502.3 ns/op	2986.45 MB/s	    1824 B/op	       3 allocs/op
+BenchmarkGCMDecrypt/1.4KB-8        	 1952496	       671.7 ns/op	2233.19 MB/s	    1824 B/op	       3 allocs/op
+PASS
+ok  	github.com/pion/dtls/v3/pkg/crypto/ciphersuite	88.993s

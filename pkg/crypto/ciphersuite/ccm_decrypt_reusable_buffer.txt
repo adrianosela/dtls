@@ -1,0 +1,66 @@
+goos: darwin
+goarch: arm64
+pkg: github.com/pion/dtls/v3/pkg/crypto/ciphersuite
+cpu: Apple M1 Pro
+BenchmarkCCMDecrypt/016B-8         	 4583642	       283.3 ns/op	  56.47 MB/s	     656 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/016B-8         	 3816352	       334.9 ns/op	  47.77 MB/s	     656 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/016B-8         	 4014595	       257.9 ns/op	  62.04 MB/s	     656 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/016B-8         	 4812241	       263.4 ns/op	  60.75 MB/s	     656 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/016B-8         	 4567986	       268.4 ns/op	  59.60 MB/s	     656 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/016B-8         	 4722400	       281.2 ns/op	  56.89 MB/s	     656 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/016B-8         	 4285820	       284.6 ns/op	  56.22 MB/s	     656 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/016B-8         	 4367450	       275.2 ns/op	  58.14 MB/s	     656 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/016B-8         	 3963874	       269.2 ns/op	  59.43 MB/s	     656 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/016B-8         	 4762221	       279.3 ns/op	  57.29 MB/s	     656 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/064B-8         	 3399684	       366.1 ns/op	 174.82 MB/s	     752 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/064B-8         	 3144630	       344.1 ns/op	 185.98 MB/s	     752 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/064B-8         	 3536517	       355.9 ns/op	 179.84 MB/s	     752 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/064B-8         	 3622320	       348.9 ns/op	 183.42 MB/s	     752 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/064B-8         	 3434486	       345.4 ns/op	 185.27 MB/s	     752 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/064B-8         	 2884434	       354.6 ns/op	 180.49 MB/s	     752 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/064B-8         	 3386740	       355.9 ns/op	 179.83 MB/s	     752 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/064B-8         	 3431022	       343.7 ns/op	 186.21 MB/s	     752 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/064B-8         	 3602325	       367.3 ns/op	 174.25 MB/s	     752 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/064B-8         	 3017599	       390.5 ns/op	 163.91 MB/s	     752 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/256B-8         	 1726437	       868.7 ns/op	 294.70 MB/s	    1152 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/256B-8         	 1402360	       747.0 ns/op	 342.68 MB/s	    1152 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/256B-8         	 1686045	       649.8 ns/op	 393.97 MB/s	    1152 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/256B-8         	 1951389	       639.1 ns/op	 400.55 MB/s	    1152 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/256B-8         	 1833250	       630.4 ns/op	 406.06 MB/s	    1152 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/256B-8         	 1850422	       663.5 ns/op	 385.83 MB/s	    1152 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/256B-8         	 1689906	       713.4 ns/op	 358.84 MB/s	    1152 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/256B-8         	 1804543	       698.1 ns/op	 366.69 MB/s	    1152 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/256B-8         	 1831370	       650.6 ns/op	 393.47 MB/s	    1152 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/256B-8         	 1893544	       632.1 ns/op	 405.03 MB/s	    1152 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/512B-8         	 1000000	      1021 ns/op	 501.29 MB/s	    1664 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/512B-8         	 1000000	      1041 ns/op	 491.69 MB/s	    1664 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/512B-8         	 1000000	      1023 ns/op	 500.60 MB/s	    1664 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/512B-8         	 1000000	      1040 ns/op	 492.54 MB/s	    1664 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/512B-8         	 1000000	      1039 ns/op	 492.55 MB/s	    1664 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/512B-8         	 1000000	      1076 ns/op	 475.64 MB/s	    1664 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/512B-8         	 1000000	      1059 ns/op	 483.65 MB/s	    1664 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/512B-8         	 1000000	      1064 ns/op	 481.07 MB/s	    1664 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/512B-8         	 1000000	      1065 ns/op	 480.55 MB/s	    1664 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/512B-8         	 1000000	      1021 ns/op	 501.53 MB/s	    1664 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/1KB-8          	  643257	      1826 ns/op	 560.75 MB/s	    2752 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/1KB-8          	  629955	      1977 ns/op	 517.96 MB/s	    2752 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/1KB-8          	  616150	      2161 ns/op	 473.83 MB/s	    2752 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/1KB-8          	  588681	      1944 ns/op	 526.76 MB/s	    2752 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/1KB-8          	  649972	      1816 ns/op	 564.03 MB/s	    2752 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/1KB-8          	  610213	      1874 ns/op	 546.31 MB/s	    2752 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/1KB-8          	  621050	      1837 ns/op	 557.53 MB/s	    2752 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/1KB-8          	  672934	      1893 ns/op	 541.01 MB/s	    2752 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/1KB-8          	  655622	      1979 ns/op	 517.48 MB/s	    2752 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/1KB-8          	  628218	      1942 ns/op	 527.20 MB/s	    2752 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/1.4KB-8        	  403224	      2822 ns/op	 531.52 MB/s	    3904 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/1.4KB-8        	  391716	      2808 ns/op	 534.19 MB/s	    3904 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/1.4KB-8        	  449024	      2638 ns/op	 568.61 MB/s	    3904 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/1.4KB-8        	  463232	      2600 ns/op	 576.92 MB/s	    3904 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/1.4KB-8        	  441793	      2796 ns/op	 536.54 MB/s	    3904 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/1.4KB-8        	  428126	      2571 ns/op	 583.47 MB/s	    3904 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/1.4KB-8        	  481665	      2711 ns/op	 553.39 MB/s	    3904 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/1.4KB-8        	  460472	      2685 ns/op	 558.67 MB/s	    3904 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/1.4KB-8        	  425728	      2707 ns/op	 554.05 MB/s	    3904 B/op	       7 allocs/op
+BenchmarkCCMDecrypt/1.4KB-8        	  474615	      2862 ns/op	 524.07 MB/s	    3904 B/op	       7 allocs/op
+PASS
+ok  	github.com/pion/dtls/v3/pkg/crypto/ciphersuite	88.235s

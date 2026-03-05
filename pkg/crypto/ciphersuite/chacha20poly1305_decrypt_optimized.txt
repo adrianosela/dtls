@@ -1,0 +1,66 @@
+goos: darwin
+goarch: arm64
+pkg: github.com/pion/dtls/v3/pkg/crypto/ciphersuite
+cpu: Apple M1 Pro
+BenchmarkChaCha20Poly1305Decrypt/016B-8         	 3682927	       330.7 ns/op	  48.38 MB/s	     112 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/016B-8         	 3639655	       327.3 ns/op	  48.88 MB/s	     112 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/016B-8         	 3724419	       321.0 ns/op	  49.84 MB/s	     112 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/016B-8         	 3700333	       330.0 ns/op	  48.48 MB/s	     112 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/016B-8         	 3523083	       326.9 ns/op	  48.95 MB/s	     112 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/016B-8         	 3691455	       332.0 ns/op	  48.20 MB/s	     112 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/016B-8         	 3694351	       324.0 ns/op	  49.38 MB/s	     112 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/016B-8         	 3731043	       321.6 ns/op	  49.75 MB/s	     112 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/016B-8         	 3688056	       320.8 ns/op	  49.87 MB/s	     112 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/016B-8         	 3746874	       327.8 ns/op	  48.81 MB/s	     112 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/064B-8         	 3283629	       366.5 ns/op	 174.63 MB/s	     208 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/064B-8         	 3330709	       363.8 ns/op	 175.92 MB/s	     208 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/064B-8         	 3318576	       375.6 ns/op	 170.41 MB/s	     208 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/064B-8         	 3309889	       374.8 ns/op	 170.75 MB/s	     208 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/064B-8         	 3272524	       364.3 ns/op	 175.70 MB/s	     208 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/064B-8         	 3297433	       363.6 ns/op	 176.02 MB/s	     208 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/064B-8         	 3310921	       396.8 ns/op	 161.27 MB/s	     208 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/064B-8         	 3121410	       392.5 ns/op	 163.06 MB/s	     208 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/064B-8         	 2781592	       389.8 ns/op	 164.19 MB/s	     208 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/064B-8         	 3304322	       366.9 ns/op	 174.43 MB/s	     208 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/256B-8         	 1655761	       739.1 ns/op	 346.35 MB/s	     608 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/256B-8         	 1661529	       735.3 ns/op	 348.17 MB/s	     608 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/256B-8         	 1648983	       731.0 ns/op	 350.19 MB/s	     608 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/256B-8         	 1637968	       735.7 ns/op	 347.97 MB/s	     608 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/256B-8         	 1643749	       745.8 ns/op	 343.25 MB/s	     608 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/256B-8         	 1554184	       896.7 ns/op	 285.50 MB/s	     608 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/256B-8         	 1629650	       758.6 ns/op	 337.45 MB/s	     608 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/256B-8         	 1574805	       857.8 ns/op	 298.42 MB/s	     608 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/256B-8         	 1407168	       762.8 ns/op	 335.62 MB/s	     608 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/256B-8         	 1637456	       731.6 ns/op	 349.93 MB/s	     608 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/512B-8         	 1000000	      1234 ns/op	 415.00 MB/s	    1184 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/512B-8         	 1000000	      1099 ns/op	 465.89 MB/s	    1184 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/512B-8         	 1000000	      1106 ns/op	 462.99 MB/s	    1184 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/512B-8         	  979938	      1118 ns/op	 458.03 MB/s	    1184 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/512B-8         	 1000000	      1102 ns/op	 464.42 MB/s	    1184 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/512B-8         	 1000000	      1259 ns/op	 406.69 MB/s	    1184 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/512B-8         	  998754	      1283 ns/op	 399.03 MB/s	    1184 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/512B-8         	  971820	      1217 ns/op	 420.67 MB/s	    1184 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/512B-8         	 1000000	      1104 ns/op	 463.79 MB/s	    1184 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/512B-8         	 1000000	      1100 ns/op	 465.39 MB/s	    1184 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/1KB-8          	  666540	      1792 ns/op	 571.37 MB/s	    2336 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/1KB-8          	  688696	      1783 ns/op	 574.18 MB/s	    2336 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/1KB-8          	  655498	      1819 ns/op	 563.08 MB/s	    2336 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/1KB-8          	  662782	      1791 ns/op	 571.83 MB/s	    2336 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/1KB-8          	  665125	      1812 ns/op	 565.09 MB/s	    2336 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/1KB-8          	  666829	      1852 ns/op	 553.04 MB/s	    2336 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/1KB-8          	  635017	      1818 ns/op	 563.34 MB/s	    2336 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/1KB-8          	  670449	      1813 ns/op	 564.90 MB/s	    2336 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/1KB-8          	  688473	      1816 ns/op	 563.97 MB/s	    2336 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/1KB-8          	  664778	      1782 ns/op	 574.54 MB/s	    2336 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/1.4KB-8        	  485836	      2445 ns/op	 613.41 MB/s	    3104 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/1.4KB-8        	  490390	      2494 ns/op	 601.50 MB/s	    3104 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/1.4KB-8        	  493971	      2458 ns/op	 610.27 MB/s	    3104 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/1.4KB-8        	  490498	      2482 ns/op	 604.24 MB/s	    3104 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/1.4KB-8        	  496276	      2485 ns/op	 603.56 MB/s	    3104 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/1.4KB-8        	  497562	      2499 ns/op	 600.20 MB/s	    3104 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/1.4KB-8        	  421242	      2504 ns/op	 598.93 MB/s	    3104 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/1.4KB-8        	  487702	      2442 ns/op	 614.18 MB/s	    3104 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/1.4KB-8        	  500694	      2473 ns/op	 606.67 MB/s	    3104 B/op	       4 allocs/op
+BenchmarkChaCha20Poly1305Decrypt/1.4KB-8        	  494853	      2531 ns/op	 592.69 MB/s	    3104 B/op	       4 allocs/op
+PASS
+ok  	github.com/pion/dtls/v3/pkg/crypto/ciphersuite	87.542s

@@ -7,6 +7,7 @@ import (
 	"crypto/cipher"
 	"encoding/binary"
 	"fmt"
+	"sync"
 
 	"github.com/pion/dtls/v3/pkg/protocol"
 	"github.com/pion/dtls/v3/pkg/protocol/recordlayer"
@@ -27,6 +28,7 @@ type ChaCha20Poly1305 struct {
 	remoteCipher  cipher.AEAD
 	localWriteIV  []byte
 	remoteWriteIV []byte
+	noncePool     sync.Pool
 }
 
 // NewChaCha20Poly1305 creates a DTLS ChaCha20-Poly1305 Cipher.
@@ -46,6 +48,12 @@ func NewChaCha20Poly1305(localKey, localWriteIV, remoteKey, remoteWriteIV []byte
 		remoteCipher:  remoteChaCha20Poly1305,
 		localWriteIV:  localWriteIV,
 		remoteWriteIV: remoteWriteIV,
+		noncePool: sync.Pool{
+			New: func() any {
+				b := make([]byte, chachaNonceLength)
+				return &b // nolint:nlreturn
+			},
+		},
 	}, nil
 }
 
@@ -54,8 +62,11 @@ func (c *ChaCha20Poly1305) Encrypt(pkt *recordlayer.RecordLayer, raw []byte) ([]
 	payload := raw[pkt.Header.Size():]
 	raw = raw[:pkt.Header.Size()]
 
-	var nonce [chachaNonceLength]byte
-	copy(nonce[:], c.localWriteIV)
+	// Get nonce from pool
+	noncePtr := c.noncePool.Get().(*[]byte) // nolint:forcetypeassert
+	nonce := *noncePtr
+
+	copy(nonce, c.localWriteIV)
 
 	// https://www.rfc-editor.org/rfc/rfc9325#name-nonce-reuse-in-tls-12
 	seq64 := (uint64(pkt.Header.Epoch) << 48) | (pkt.Header.SequenceNumber & 0x0000ffffffffffff)
@@ -75,9 +86,12 @@ func (c *ChaCha20Poly1305) Encrypt(pkt *recordlayer.RecordLayer, raw []byte) ([]
 	// in the record (unlike GCM which includes 8 bytes)
 	result := make([]byte, len(raw)+len(payload)+chachaTagLength)
 	copy(result, raw)
-	c.localCipher.Seal(result[len(raw):len(raw)], nonce[:], payload, additionalData)
+	c.localCipher.Seal(result[len(raw):len(raw)], nonce, payload, additionalData)
 
 	binary.BigEndian.PutUint16(result[pkt.Header.Size()-2:], uint16(len(payload)+chachaTagLength)) //nolint:gosec
+
+	// Return nonce to pool
+	c.noncePool.Put(noncePtr)
 
 	return result, nil
 }
@@ -93,8 +107,11 @@ func (c *ChaCha20Poly1305) Decrypt(header recordlayer.Header, in []byte) ([]byte
 		return in, nil
 	}
 
-	var nonce [chachaNonceLength]byte
-	copy(nonce[:], c.remoteWriteIV)
+	// Get nonce from pool
+	noncePtr := c.noncePool.Get().(*[]byte) // nolint:forcetypeassert
+	nonce := *noncePtr
+
+	copy(nonce, c.remoteWriteIV)
 
 	// https://www.rfc-editor.org/rfc/rfc9325#name-nonce-reuse-in-tls-12
 	seq64 := (uint64(header.Epoch) << 48) | (header.SequenceNumber & 0x0000ffffffffffff)
@@ -113,10 +130,15 @@ func (c *ChaCha20Poly1305) Decrypt(header recordlayer.Header, in []byte) ([]byte
 		additionalData = generateAEADAdditionalData(&header, len(ciphertext)-chachaTagLength)
 	}
 
-	plaintext, err := c.remoteCipher.Open(nil, nonce[:], ciphertext, additionalData)
+	plaintext, err := c.remoteCipher.Open(nil, nonce, ciphertext, additionalData)
 	if err != nil {
+		// Return nonce to pool on error
+		c.noncePool.Put(noncePtr)
 		return nil, fmt.Errorf("%w: %v", errDecryptPacket, err) //nolint:errorlint
 	}
+
+	// Return nonce to pool
+	c.noncePool.Put(noncePtr)
 
 	return append(in[:header.Size()], plaintext...), nil
 }
